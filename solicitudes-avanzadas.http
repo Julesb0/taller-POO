@@ -1,0 +1,85 @@
+@baseUrl = http://localhost:8080
+
+### Preparación: habitación estándar
+# Hace falta para que la consulta polimórfica mezcle los dos tipos.
+POST {{baseUrl}}/api/habitaciones/estandar
+Content-Type: application/json
+
+{
+  "numero": "E01-101",
+  "precioPorNoche": 120.0,
+  "capacidadMaxima": 2,
+  "camasIndividuales": 2
+}
+
+> {%
+  client.global.set("estandarId", response.body.id);
+%}
+
+### Prueba 1. Creación de Suite Presidencial
+# Respuesta esperada: 201 Created con el ID generado.
+POST {{baseUrl}}/api/habitaciones/suites
+Content-Type: application/json
+
+{
+  "numero": "P05-501",
+  "precioPorNoche": 350.0,
+  "capacidadMaxima": 2,
+  "jacuzziPrivado": true,
+  "incluyeMayordomo": true
+}
+
+> {%
+  client.global.set("suiteId", response.body.id);
+%}
+
+### Prueba 2. Consulta polimórfica
+# El arreglo debe incluir la estándar (tipo ESTANDAR, camasIndividuales)
+# y la suite (tipo SUITE, jacuzziPrivado, incluyeMayordomo).
+GET {{baseUrl}}/api/habitaciones
+
+### Preparación: cliente para el resumen y el PATCH
+POST {{baseUrl}}/api/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Ana Recepcion",
+  "email": "ana.recepcion@hotel.com"
+}
+
+> {%
+  client.global.set("clienteId", response.body.id);
+%}
+
+### Preparación: reserva de la suite (3 noches x 350 = 1050)
+POST {{baseUrl}}/api/reservas
+Content-Type: application/json
+
+{
+  "clienteId": "{{clienteId}}",
+  "habitacionId": "{{suiteId}}",
+  "fechaInicio": "2026-10-01T12:00:00",
+  "fechaFin": "2026-10-04T12:00:00"
+}
+
+> {%
+  client.global.set("reservaId", response.body.id);
+%}
+
+### Prueba 3. Resumen ejecutivo del cliente
+# Debe verse totalReservasRealizadas, montoTotalGastado y reservasRecientes
+# sin volver a anidar al cliente.
+GET {{baseUrl}}/api/clientes/{{clienteId}}/resumen
+
+### Prueba 4. Actualización selectiva (PATCH)
+# Solo cambia el nombre. Email, activo y penalizaciones quedan igual.
+PATCH {{baseUrl}}/api/clientes/{{clienteId}}
+Content-Type: application/json
+
+{
+  "nombre": "Nuevo Nombre Modificado"
+}
+
+### Verificación de la prueba 4
+# email sigue ana.recepcion@hotel.com, activo true, penalizaciones 0.
+GET {{baseUrl}}/api/clientes/{{clienteId}}
