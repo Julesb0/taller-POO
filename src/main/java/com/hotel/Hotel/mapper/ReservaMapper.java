@@ -10,6 +10,10 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface ReservaMapper {
 
+    @Mapping(target = "nombreHuesped", source = "cliente.nombre")
+    @Mapping(target = "habitacionNumero", source = "habitacion.numero")
+    @Mapping(target = "fechaInicio", expression = "java(reserva.getPeriodo().fechaInicio().toLocalDate())")
+    @Mapping(target = "fechaFin", expression = "java(reserva.getPeriodo().fechaFin().toLocalDate())")
     @Mapping(target = "estado", expression = "java(reserva.getEstado().name())")
     ReservaResponse toResponse(Reserva reserva);
 
