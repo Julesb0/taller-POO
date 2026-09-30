@@ -1,7 +1,13 @@
 @baseUrl = http://localhost:8080
 
+# IDs que se toman solos de las respuestas (extensión REST Client de VS Code)
+@estandarId = {{crearEstandar.response.body.$.id}}
+@suiteId = {{crearSuite.response.body.$.id}}
+@clienteId = {{crearCliente.response.body.$.id}}
+
 ### Preparación: habitación estándar
 # Hace falta para que la consulta polimórfica mezcle los dos tipos.
+# @name crearEstandar
 POST {{baseUrl}}/api/habitaciones/estandar
 Content-Type: application/json
 
@@ -12,12 +18,9 @@ Content-Type: application/json
   "camasIndividuales": 2
 }
 
-> {%
-  client.global.set("estandarId", response.body.id);
-%}
-
 ### Prueba 1. Creación de Suite Presidencial
 # Respuesta esperada: 201 Created con el ID generado.
+# @name crearSuite
 POST {{baseUrl}}/api/habitaciones/suites
 Content-Type: application/json
 
@@ -29,16 +32,13 @@ Content-Type: application/json
   "incluyeMayordomo": true
 }
 
-> {%
-  client.global.set("suiteId", response.body.id);
-%}
-
 ### Prueba 2. Consulta polimórfica
 # El arreglo debe incluir la estándar (tipo ESTANDAR, camasIndividuales)
 # y la suite (tipo SUITE, jacuzziPrivado, incluyeMayordomo).
 GET {{baseUrl}}/api/habitaciones
 
 ### Preparación: cliente para el resumen y el PATCH
+# @name crearCliente
 POST {{baseUrl}}/api/clientes
 Content-Type: application/json
 
@@ -46,10 +46,6 @@ Content-Type: application/json
   "nombre": "Ana Recepcion",
   "email": "ana.recepcion@hotel.com"
 }
-
-> {%
-  client.global.set("clienteId", response.body.id);
-%}
 
 ### Preparación: reserva de la suite (3 noches x 350 = 1050)
 POST {{baseUrl}}/api/reservas
@@ -61,10 +57,6 @@ Content-Type: application/json
   "fechaInicio": "2026-10-01T12:00:00",
   "fechaFin": "2026-10-04T12:00:00"
 }
-
-> {%
-  client.global.set("reservaId", response.body.id);
-%}
 
 ### Prueba 3. Resumen ejecutivo del cliente
 # Debe verse totalReservasRealizadas, montoTotalGastado y reservasRecientes
